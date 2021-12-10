@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using ShoppingCart.Web.Models;
+using ShoppingCart.Web.Services.IServices;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,20 +14,33 @@ namespace ShoppingCart.Web.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-
-        public HomeController(ILogger<HomeController> logger)
+        private readonly IProductService _productService;
+        public HomeController(ILogger<HomeController> logger, IProductService productService)
         {
             _logger = logger;
+            _productService = productService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            List<ProductDto> productDtos = new();
+            var response = await _productService.GetAllProductsAsync<ResponseDto>();
+            if (response != null && response.IsSuccess)
+            {
+                productDtos = JsonConvert.DeserializeObject<List<ProductDto>>(Convert.ToString(response.Result));
+            }
+            return View(productDtos);
         }
 
-        public IActionResult Privacy()
+        public async Task<IActionResult> Details(int productId)
         {
-            return View();
+            ProductDto productDto = new();
+            var response = await _productService.GetProductByIdAsync<ResponseDto>(productId);
+            if (response != null && response.IsSuccess)
+            {
+                productDto = JsonConvert.DeserializeObject<ProductDto>(Convert.ToString(response.Result));
+            }
+            return View(productDto);
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
