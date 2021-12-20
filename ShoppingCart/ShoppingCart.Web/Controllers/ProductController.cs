@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using ShoppingCart.Web.Models;
 using ShoppingCart.Web.Services.IServices;
@@ -19,7 +21,8 @@ namespace ShoppingCart.Web.Controllers
         public async Task<IActionResult> ProductIndex()
         {
             List<ProductDto> productDtos = new();
-            var response = await _productService.GetAllProductsAsync<ResponseDto>();
+            var accessToken = await HttpContext.GetTokenAsync("access_token");
+            var response = await _productService.GetAllProductsAsync<ResponseDto>(accessToken);
             if(response !=null && response.IsSuccess)
             {
                 productDtos = JsonConvert.DeserializeObject<List<ProductDto>>(Convert.ToString(response.Result));
@@ -38,7 +41,8 @@ namespace ShoppingCart.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                var response = await _productService.CreateProductAsync<ResponseDto>(productDto);
+                var accessToken = await HttpContext.GetTokenAsync("access_token");
+                var response = await _productService.CreateProductAsync<ResponseDto>(productDto, accessToken);
                 if (response != null && response.IsSuccess)
                 {
                     return RedirectToAction(nameof(ProductIndex));
@@ -47,8 +51,9 @@ namespace ShoppingCart.Web.Controllers
             return View(productDto);
         }
         public async Task<IActionResult> ProductEdit(int productId)
-        {             
-            var response = await _productService.GetProductByIdAsync<ResponseDto>(productId);
+        {
+            var accessToken = await HttpContext.GetTokenAsync("access_token");
+            var response = await _productService.GetProductByIdAsync<ResponseDto>(productId, accessToken);
             if (response != null && response.IsSuccess)
             {
                 ProductDto productDto = JsonConvert.DeserializeObject<ProductDto>(Convert.ToString(response.Result));
@@ -64,7 +69,8 @@ namespace ShoppingCart.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                var response = await _productService.UpdateProductAsync<ResponseDto>(productDto);
+                var accessToken = await HttpContext.GetTokenAsync("access_token");
+                var response = await _productService.UpdateProductAsync<ResponseDto>(productDto, accessToken);
                 if (response != null && response.IsSuccess)
                 {
                     return RedirectToAction(nameof(ProductIndex));
@@ -73,9 +79,11 @@ namespace ShoppingCart.Web.Controllers
             return View(productDto);
         }
 
+        [Authorize(Roles ="Admin")]
         public async Task<IActionResult> ProductDelete(int productId)
         {
-            var response = await _productService.GetProductByIdAsync<ResponseDto>(productId);
+            var accessToken = await HttpContext.GetTokenAsync("access_token");
+            var response = await _productService.GetProductByIdAsync<ResponseDto>(productId, accessToken);
             if (response != null && response.IsSuccess)
             {
                 ProductDto productDto = JsonConvert.DeserializeObject<ProductDto>(Convert.ToString(response.Result));
@@ -87,11 +95,13 @@ namespace ShoppingCart.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ProductDelete(ProductDto productDto)
         {
             if (ModelState.IsValid)
             {
-                var response = await _productService.DeleteProductAsync<ResponseDto>(productDto.ProductId);
+                var accessToken = await HttpContext.GetTokenAsync("access_token");
+                var response = await _productService.DeleteProductAsync<ResponseDto>(productDto.ProductId, accessToken);
                 if (response != null && response.IsSuccess)
                 {
                     return RedirectToAction(nameof(ProductIndex));

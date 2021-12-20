@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ShoppingCart.ProductAPI.Models.DTOs;
 using ShoppingCart.ProductAPI.Repository;
@@ -22,7 +23,8 @@ namespace ShoppingCart.ProductAPI.Controllers
             this.responseDto = new ResponseDto();
         }
         
-        [HttpGet]        
+        [HttpGet]  
+        [Authorize]
         public async Task<object> GetProductList()
         {
             try
@@ -39,6 +41,7 @@ namespace ShoppingCart.ProductAPI.Controllers
             return responseDto;
         }
         [HttpGet]
+        [Authorize]
         [Route("{id}")]
         public async Task<object> GetProductById(int id)
         {
@@ -56,6 +59,7 @@ namespace ShoppingCart.ProductAPI.Controllers
             return responseDto;
         }
         [HttpPost]
+        [Authorize]
         public async Task<object> CreateProduct([FromBody]ProductDto productDto)
         {
             try
@@ -73,6 +77,7 @@ namespace ShoppingCart.ProductAPI.Controllers
         }
 
         [HttpPut]
+        [Authorize]
         public async Task<object> UpdateProduct([FromBody] ProductDto productDto)
         {
             try
@@ -90,6 +95,7 @@ namespace ShoppingCart.ProductAPI.Controllers
         }
 
         [HttpDelete]
+        [Authorize(Roles ="Admin")]
         [Route("{id}")]
         public async Task<object> DeletProductById(int id)
         {

@@ -3,9 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31410.223
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShoppingCart.ProductAPI", "ShoppingCart.ProductAPI\ShoppingCart.ProductAPI.csproj", "{C11F8D4F-DDD4-4DD6-9B87-362C97D32F9A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShoppingCart.ProductAPI", "ShoppingCart.ProductAPI\ShoppingCart.ProductAPI.csproj", "{C11F8D4F-DDD4-4DD6-9B87-362C97D32F9A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShoppingCart.Web", "ShoppingCart.Web\ShoppingCart.Web.csproj", "{827DF070-228F-48BA-B3F9-89DD87C8CC84}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShoppingCart.Web", "ShoppingCart.Web\ShoppingCart.Web.csproj", "{827DF070-228F-48BA-B3F9-89DD87C8CC84}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShoppingCart.Identity", "ShoppingCart.Identity\ShoppingCart.Identity.csproj", "{0AB9F5D2-01A6-44F4-84F9-F9BD48B52F64}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShoppingCart.ShoppingCartAPI", "ShoppingCart.ShoppingCartAPI\ShoppingCart.ShoppingCartAPI.csproj", "{FE33A52C-2D54-4F2F-8CAE-6599DEAF109C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +25,14 @@ Global
 		{827DF070-228F-48BA-B3F9-89DD87C8CC84}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{827DF070-228F-48BA-B3F9-89DD87C8CC84}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{827DF070-228F-48BA-B3F9-89DD87C8CC84}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0AB9F5D2-01A6-44F4-84F9-F9BD48B52F64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AB9F5D2-01A6-44F4-84F9-F9BD48B52F64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AB9F5D2-01A6-44F4-84F9-F9BD48B52F64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0AB9F5D2-01A6-44F4-84F9-F9BD48B52F64}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE33A52C-2D54-4F2F-8CAE-6599DEAF109C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE33A52C-2D54-4F2F-8CAE-6599DEAF109C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE33A52C-2D54-4F2F-8CAE-6599DEAF109C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE33A52C-2D54-4F2F-8CAE-6599DEAF109C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
