@@ -33,6 +33,34 @@ namespace ShoppingCart.Web.Controllers
             return View();
         }
 
+        [HttpPost]
+        [ActionName("ApplyCoupon")]
+        public async Task<object> ApplyCoupon(CartDto cartDto)
+        {
+            var userId = User.Claims.Where(u => u.Type == "sub")?.FirstOrDefault()?.Value;
+            var accessToken = await HttpContext.GetTokenAsync("access_token");
+            var response = await _cartService.ApplyCoupon<ResponseDto>(cartDto, accessToken);
+            if (response != null && response.IsSuccess)
+            {
+                return RedirectToAction(nameof(CartIndex));
+            }
+            return response;
+        }
+
+        [HttpPost]
+        [ActionName("RemoveCoupon")]
+        public async Task<object> RemoveCoupon(CartDto cartDto)
+        {
+            var userId = User.Claims.Where(u => u.Type == "sub")?.FirstOrDefault()?.Value;
+            var accessToken = await HttpContext.GetTokenAsync("access_token");           
+            var response = await _cartService.RemoveCoupon<ResponseDto>(cartDto.CartHeader.UserId, accessToken);
+            if (response != null && response.IsSuccess)
+            {
+                return RedirectToAction(nameof(CartIndex));
+            }
+            return response;
+        }
+
         private async Task<CartDto> LoadCartItemByUserId()
         {
             CartDto cartDtos = new();
