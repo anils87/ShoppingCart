@@ -13,9 +13,12 @@ namespace ShoppingCart.Web.Controllers
     public class CartController : Controller
     {
         private readonly ICartService _cartService;
-        public CartController(ICartService cartService)
+
+        private readonly ICouponService _couponService;
+        public CartController(ICartService cartService, ICouponService couponService)
         {
             this._cartService = cartService;
+            this._couponService = couponService;
         }
         public async Task<IActionResult> CartIndex()
         {            
@@ -61,6 +64,36 @@ namespace ShoppingCart.Web.Controllers
             return response;
         }
 
+
+        [HttpGet]
+        public async Task<IActionResult> Checkout()
+        {
+            return View(await LoadCartItemByUserId());
+        }
+
+        [HttpPost]
+        [ActionName("Checkout")]
+        public async Task<object> Checkout(CartDto cartDto)
+        {
+            try
+            {   
+                var accessToken = await HttpContext.GetTokenAsync("access_token");
+                var response = await _cartService.Checkout<ResponseDto>(cartDto.CartHeader, accessToken);
+                return RedirectToAction(nameof(Confirmation));
+               
+            }
+            catch(Exception ex)
+            {
+                return View(cartDto);
+                     
+            }           
+        }
+        
+        public async Task<IActionResult> Confirmation()
+        {
+            return View();
+        }
+
         private async Task<CartDto> LoadCartItemByUserId()
         {
             CartDto cartDtos = new();
@@ -73,10 +106,21 @@ namespace ShoppingCart.Web.Controllers
             }
             if(cartDtos.CartHeader!=null)
             {
+                if (!string.IsNullOrEmpty(cartDtos.CartHeader.CouponCode))
+                {
+                    var coupon = await _couponService.GetCoupon<ResponseDto>(cartDtos.CartHeader.CouponCode, accessToken);
+                    if(coupon!=null && coupon.IsSuccess)
+                    {
+                        var couponDto = JsonConvert.DeserializeObject<CouponDto>(Convert.ToString(coupon.Result));
+                        cartDtos.CartHeader.DiscountTotal = couponDto.DiscountAmount;
+                    }
+
+                }
                 foreach(var detail in cartDtos.CartDetails)
                 {
                     cartDtos.CartHeader.OrderTotal += (detail.Count * detail.Product.Price);
-                }                
+                }
+                cartDtos.CartHeader.OrderTotal -= cartDtos.CartHeader.DiscountTotal;
             }
 
             return cartDtos;

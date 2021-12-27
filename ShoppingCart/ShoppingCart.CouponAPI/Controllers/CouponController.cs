@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ShoppingCart.CouponAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/coupon")]
     [ApiController]
     public class CouponController : ControllerBase
     {
