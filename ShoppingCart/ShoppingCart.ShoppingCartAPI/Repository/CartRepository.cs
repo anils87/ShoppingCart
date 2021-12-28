@@ -91,6 +91,8 @@ namespace ShoppingCart.ShoppingCartAPI.Repository
                 {
                     //if it has then update the count
                     cart.CartDetails.FirstOrDefault().Count += cartDetailsFromDB.Count;
+                    cart.CartDetails.FirstOrDefault().CartDetailId += cartDetailsFromDB.CartDetailId;
+                    cart.CartDetails.FirstOrDefault().CartHeaderId += cartDetailsFromDB.CartHeaderId;
                     cart.CartDetails.FirstOrDefault().Product = null;
                     _db.CartDetails.Update(cart.CartDetails.FirstOrDefault());
                     await _db.SaveChangesAsync();

@@ -1,13 +1,11 @@
-﻿using ShoppingCart.MessageBus;
-using ShoppingCart.ShoppingCartAPI.Models.DTOs;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ShoppingCart.ShoppingCartAPI.Message
+namespace ShoppingCart.OrderAPI.Message
 {
-    public class CheckoutHeaderDto : BaseMessage
+    public class CheckoutHeaderDto
     {
         public int CartHeaderId { get; set; }
         public string UserId { get; set; }

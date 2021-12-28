@@ -3,22 +3,23 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using ShoppingCart.ShoppingCartAPI.DBContext;
-using Microsoft.EntityFrameworkCore;
+using ShoppingCart.OrderAPI.DBContext;
+using ShoppingCart.OrderAPI.Extension;
+using ShoppingCart.OrderAPI.Messaging;
+using ShoppingCart.OrderAPI.Repository;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.IdentityModel.Tokens;
-using ShoppingCart.ShoppingCartAPI.Repository;
-using ShoppingCart.MessageBus;
 
-namespace ShoppingCart.ShoppingCartAPI
+namespace ShoppingCart.OrderAPI
 {
     public class Startup
     {
@@ -32,18 +33,20 @@ namespace ShoppingCart.ShoppingCartAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<ApplicationDBContext>(options => {
+            services.AddDbContext<ApplicationDBContext>(options =>
+            {
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
             });
 
-            IMapper mapper = MappingConfig.RegisterMaps().CreateMapper();
-            services.AddSingleton(mapper);
-            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());            
-            services.AddScoped<ICartRepository, CartRepository>();
-            services.AddSingleton<IMessageBus,AzureServiceBusMessageBus>();
-            services.AddHttpClient<ICouponRepository, CouponRepository>(u=>u.BaseAddress= new Uri(Configuration["ServiceUrls:CouponAPI"]));
-            services.AddScoped<ICouponRepository, CouponRepository>();
+            //IMapper mapper = MappingConfig.RegisterMaps().CreateMapper();
+            //services.AddSingleton(mapper);
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            services.AddScoped<IOrderRepository, OrderRepository>();
 
+            var optionBuilder = new DbContextOptionsBuilder<ApplicationDBContext>();
+            optionBuilder.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+            services.AddSingleton(new OrderRepository(optionBuilder.Options));
+            services.AddSingleton<IAzureServiceBusConsumer, AzureServiceBusConsumer>();
 
             services.AddAuthentication("Bearer").AddJwtBearer("Bearer", options =>
             {
@@ -66,7 +69,7 @@ namespace ShoppingCart.ShoppingCartAPI
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "ShoppingCart.ShoppingCartAPI", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "ShoppingCart.OrderAPI", Version = "v1" });
                 c.EnableAnnotations();
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
@@ -102,13 +105,12 @@ namespace ShoppingCart.ShoppingCartAPI
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ShoppingCart.ShoppingCartAPI v1"));
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ShoppingCart.OrderAPI v1"));
             }
 
             app.UseHttpsRedirection();
 
             app.UseRouting();
-
             app.UseAuthentication();
             app.UseAuthorization();
 
@@ -116,6 +118,8 @@ namespace ShoppingCart.ShoppingCartAPI
             {
                 endpoints.MapControllers();
             });
+
+            app.UseAzureServiceBusConsumer();
         }
     }
 }

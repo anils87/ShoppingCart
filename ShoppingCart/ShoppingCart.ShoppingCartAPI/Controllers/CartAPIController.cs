@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ShoppingCart.MessageBus;
 using ShoppingCart.ShoppingCartAPI.Message;
 using ShoppingCart.ShoppingCartAPI.Models.DTOs;
 using ShoppingCart.ShoppingCartAPI.Repository;
@@ -15,11 +16,15 @@ namespace ShoppingCart.ShoppingCartAPI.Controllers
     public class CartAPIController : ControllerBase
     {
         private readonly ICartRepository _cartRepository;
+        private readonly ICouponRepository _couponRepository;
         private ResponseDto _responseDto;
 
-        public CartAPIController(ICartRepository cartRepository)
+        private readonly IMessageBus _messageBus;
+        public CartAPIController(ICartRepository cartRepository, IMessageBus messageBus, ICouponRepository couponRepository)
         {
             _cartRepository = cartRepository;
+            _messageBus = messageBus;
+            _couponRepository = couponRepository;
             this._responseDto = new ResponseDto();
         }
 
@@ -162,10 +167,22 @@ namespace ShoppingCart.ShoppingCartAPI.Controllers
                 {
                     return BadRequest();
                 }
+                if (!string.IsNullOrEmpty(checkoutHeader.CouponCode))
+                {
+                    CouponDto coupon = await _couponRepository.GetCoupon(checkoutHeader.CouponCode);
+                    if(checkoutHeader.DiscountTotal != coupon.DiscountAmount)
+                    {
+                        _responseDto.IsSuccess = false;
+                        _responseDto.ErrorMessage = new List<string>() { "Coupon Price has changed, please confirm" };
+                        _responseDto.DisplayMessage = "Coupon Price has changed, please confirm";
+                        return _responseDto;
+                    }
+                }
                 checkoutHeader.CartDetails = cartDto.CartDetails;
-                // logic to add message to process order.
-                //_responseDto.IsSuccess = true;
-                //_responseDto.Result = isSuccess;
+                // logic to add message to process order.                
+                await _messageBus.PublishMessage(checkoutHeader, "checkoutmessagetopic");
+                _responseDto.IsSuccess = true;
+                _responseDto.Result = checkoutHeader;
 
             }
             catch (Exception ex)
