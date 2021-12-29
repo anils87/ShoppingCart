@@ -83,12 +83,14 @@ namespace ShoppingCart.ShoppingCartAPI.Controllers
 
             return _responseDto;
         }
-        [HttpPost("RemoveCart/{cartDetailId}")]
+        
+        [HttpPost("RemoveCart")]
         public async Task<object> GetCart([FromBody]int cartId)
         {
             try
             {
                 bool IsSuccess = await _cartRepository.RemoveFromCart(cartId);
+                _responseDto.IsSuccess = IsSuccess;
                 _responseDto.Result = IsSuccess;
 
             }
@@ -179,8 +181,14 @@ namespace ShoppingCart.ShoppingCartAPI.Controllers
                     }
                 }
                 checkoutHeader.CartDetails = cartDto.CartDetails;
-                // logic to add message to process order.                
-                await _messageBus.PublishMessage(checkoutHeader, "checkoutmessagetopic");
+                // logic to add message to process order.
+                //passing queue topic name 
+                //await _messageBus.PublishMessage(checkoutHeader, "checkoutmessagetopic");
+                
+                // passing queue name
+                await _messageBus.PublishMessage(checkoutHeader, "checkoutqueue");
+                await _cartRepository.ClearCart(checkoutHeader.UserId);
+
                 _responseDto.IsSuccess = true;
                 _responseDto.Result = checkoutHeader;
 

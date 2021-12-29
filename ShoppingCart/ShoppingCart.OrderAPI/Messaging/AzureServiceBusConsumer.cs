@@ -1,6 +1,7 @@
 ﻿using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using ShoppingCart.MessageBus;
 using ShoppingCart.OrderAPI.Extension;
 using ShoppingCart.OrderAPI.Message;
 using ShoppingCart.OrderAPI.Models;
@@ -18,22 +19,32 @@ namespace ShoppingCart.OrderAPI.Messaging
         private readonly string serviceBusConnectionString;
         private readonly string subscriptionCheckout;
         private readonly string checkoutMessageTopic;
+        private readonly string orderpaymentprocessTopic;
+        private readonly string orderUpdatePaymentResultTopic;
         private readonly OrderRepository _orderRepository;
 
         private readonly IConfiguration _configuration;
 
         private ServiceBusProcessor _checkoutProcessor;
-        public AzureServiceBusConsumer(OrderRepository orderRepository, IConfiguration configuration)
+        private ServiceBusProcessor _orderUpdatePaymentStatusProcess;
+
+        private IMessageBus _messageBus;
+
+        public AzureServiceBusConsumer(OrderRepository orderRepository, IConfiguration configuration, IMessageBus messageBus)
         {
             _orderRepository = orderRepository;
             _configuration = configuration;
+            _messageBus = messageBus;
 
             serviceBusConnectionString = _configuration.GetValue<string>("ServiceBusConnectionString");
             subscriptionCheckout = _configuration.GetValue<string>("SubscriptionCheckout");
             checkoutMessageTopic = _configuration.GetValue<string>("CheckoutMessageTopic");
+            orderpaymentprocessTopic = _configuration.GetValue<string>("OrderPaymentProcessTopic");
+            orderUpdatePaymentResultTopic = _configuration.GetValue<string>("OrderUpdatePaymentResultTopic");
 
             var client = new ServiceBusClient(serviceBusConnectionString);
             _checkoutProcessor = client.CreateProcessor(checkoutMessageTopic, subscriptionCheckout);
+            _orderUpdatePaymentStatusProcess = client.CreateProcessor(orderUpdatePaymentResultTopic, subscriptionCheckout);
 
         }
 
@@ -42,6 +53,10 @@ namespace ShoppingCart.OrderAPI.Messaging
             _checkoutProcessor.ProcessMessageAsync += OnCheckoutMessageReceived;
             _checkoutProcessor.ProcessErrorAsync += ErrorHandler;
             await _checkoutProcessor.StartProcessingAsync();
+
+            _orderUpdatePaymentStatusProcess.ProcessMessageAsync += OnOrderPaymentUpdateReceived;
+            _orderUpdatePaymentStatusProcess.ProcessErrorAsync += ErrorHandler;
+            await _orderUpdatePaymentStatusProcess.StartProcessingAsync();
         }
 
 
@@ -50,6 +65,9 @@ namespace ShoppingCart.OrderAPI.Messaging
         
             await _checkoutProcessor.StopProcessingAsync();
             await _checkoutProcessor.DisposeAsync();
+
+            await _orderUpdatePaymentStatusProcess.StopProcessingAsync();
+            await _orderUpdatePaymentStatusProcess.DisposeAsync();
         }
 
         Task ErrorHandler(ProcessErrorEventArgs args)
@@ -95,6 +113,36 @@ namespace ShoppingCart.OrderAPI.Messaging
             }
 
             await _orderRepository.AddOrder(orderHeader);
+
+            // Payment Process Initiated
+            PaymentRequestMessage paymentRequestMessage = new()
+            {
+                Name = orderHeader.FirstName + " " + orderHeader.LastName,
+                CardNumber = orderHeader.CardNumber,
+                CVV = orderHeader.CVV,
+                ExpiryMonthYear = orderHeader.ExpiryMonthYear,
+                OrderId = orderHeader.OrderHeaderId,
+                OrderTotal = orderHeader.OrderTotal
+            };
+
+            try
+            {
+                await _messageBus.PublishMessage(paymentRequestMessage, orderpaymentprocessTopic);
+                await args.CompleteMessageAsync(args.Message);
+            }
+            catch(Exception)
+            {
+                throw;
+            }
+        }
+
+        private async Task OnOrderPaymentUpdateReceived(ProcessMessageEventArgs args)
+        {
+            var message = args.Message;
+            var body = Encoding.UTF8.GetString(message.Body);
+            UpdatePaymentResultMessage updatePaymentResultMessage = JsonConvert.DeserializeObject<UpdatePaymentResultMessage>(body);
+            await _orderRepository.UpdateOrderPaymentStatus(updatePaymentResultMessage.OrderId, updatePaymentResultMessage.Status);
+            await args.CompleteMessageAsync(args.Message);
         }
     }
 }

@@ -40,9 +40,11 @@ namespace ShoppingCart.ShoppingCartAPI
             services.AddSingleton(mapper);
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());            
             services.AddScoped<ICartRepository, CartRepository>();
-            services.AddSingleton<IMessageBus,AzureServiceBusMessageBus>();
-            services.AddHttpClient<ICouponRepository, CouponRepository>(u=>u.BaseAddress= new Uri(Configuration["ServiceUrls:CouponAPI"]));
             services.AddScoped<ICouponRepository, CouponRepository>();
+            services.AddSingleton<IMessageBus,AzureServiceBusMessageBus>();
+            
+            services.AddHttpClient<ICouponRepository, CouponRepository>(u=>u.BaseAddress = new Uri(Configuration["ServiceUrls:CouponAPI"]));
+            
 
 
             services.AddAuthentication("Bearer").AddJwtBearer("Bearer", options =>

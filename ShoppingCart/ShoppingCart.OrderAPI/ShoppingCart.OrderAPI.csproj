@@ -29,4 +29,8 @@
     <Folder Include="Controllers\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ShoppingCart.MessageBus\ShoppingCart.MessageBus.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using ShoppingCart.MessageBus;
 using ShoppingCart.OrderAPI.DBContext;
 using ShoppingCart.OrderAPI.Extension;
 using ShoppingCart.OrderAPI.Messaging;
@@ -47,6 +48,7 @@ namespace ShoppingCart.OrderAPI
             optionBuilder.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
             services.AddSingleton(new OrderRepository(optionBuilder.Options));
             services.AddSingleton<IAzureServiceBusConsumer, AzureServiceBusConsumer>();
+            services.AddSingleton<IMessageBus, AzureServiceBusMessageBus>();
 
             services.AddAuthentication("Bearer").AddJwtBearer("Bearer", options =>
             {
