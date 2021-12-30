@@ -1,12 +1,11 @@
-﻿using ShoppingCart.MessageBus;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ShoppingCart.PaymentAPI.Message
+namespace ShoppingCart.EmailAPI.Message
 {
-    public class UpdatePaymentResultMessage : BaseMessage
+    public class UpdatePaymentResultMessage
     {
         public int OrderId { get; set; }
         public bool Status { get; set; }

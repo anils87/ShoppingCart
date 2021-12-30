@@ -106,7 +106,7 @@ namespace ShoppingCart.OrderAPI.Messaging
                     ProductId = detailList.ProductId,
                     ProductName = detailList.Product.Name,
                     Price = detailList.Product.Price,
-                    Count = detailList.Count
+                    Count = detailList.Count                   
                 };
                 orderHeader.CartTotalItems += detailList.Count;
                 orderHeader.OrderDetails.Add(orderDetails);
@@ -122,7 +122,8 @@ namespace ShoppingCart.OrderAPI.Messaging
                 CVV = orderHeader.CVV,
                 ExpiryMonthYear = orderHeader.ExpiryMonthYear,
                 OrderId = orderHeader.OrderHeaderId,
-                OrderTotal = orderHeader.OrderTotal
+                OrderTotal = orderHeader.OrderTotal,
+                Email = orderHeader.Email,
             };
 
             try

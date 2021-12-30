@@ -28,8 +28,8 @@ namespace ShoppingCart.Web.Controllers
         public async Task<IActionResult> Index()
         {
             List<ProductDto> productDtos = new();
-            var accessToken = await HttpContext.GetTokenAsync("access_token");
-            var response = await _productService.GetAllProductsAsync<ResponseDto>(accessToken);
+            
+            var response = await _productService.GetAllProductsAsync<ResponseDto>("");
             if (response != null && response.IsSuccess)
             {
                 productDtos = JsonConvert.DeserializeObject<List<ProductDto>>(Convert.ToString(response.Result));

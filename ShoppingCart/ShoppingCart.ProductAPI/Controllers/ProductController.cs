@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace ShoppingCart.ProductAPI.Controllers
 {    
-    [Route("api/[controller]")]
+    [Route("api/product")]
     [ApiController]
     public class ProductController : ControllerBase
     {
@@ -23,8 +23,7 @@ namespace ShoppingCart.ProductAPI.Controllers
             this.responseDto = new ResponseDto();
         }
         
-        [HttpGet]  
-        [Authorize]
+        [HttpGet]          
         public async Task<object> GetProductList()
         {
             try
@@ -40,8 +39,7 @@ namespace ShoppingCart.ProductAPI.Controllers
             }
             return responseDto;
         }
-        [HttpGet]
-        [Authorize]
+        [HttpGet]        
         [Route("{id}")]
         public async Task<object> GetProductById(int id)
         {
