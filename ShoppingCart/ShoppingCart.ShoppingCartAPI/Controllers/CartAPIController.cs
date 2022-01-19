@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using ShoppingCart.MessageBus;
 using ShoppingCart.ShoppingCartAPI.Message;
 using ShoppingCart.ShoppingCartAPI.Models.DTOs;
+using ShoppingCart.ShoppingCartAPI.RabbitMQSender;
 using ShoppingCart.ShoppingCartAPI.Repository;
 using System;
 using System.Collections.Generic;
@@ -20,12 +21,15 @@ namespace ShoppingCart.ShoppingCartAPI.Controllers
         private ResponseDto _responseDto;
 
         private readonly IMessageBus _messageBus;
-        public CartAPIController(ICartRepository cartRepository, IMessageBus messageBus, ICouponRepository couponRepository)
+
+        private readonly IRabbitMQCartMessageSender _rabbitMQCartMessageSender;
+        public CartAPIController(ICartRepository cartRepository, IMessageBus messageBus, ICouponRepository couponRepository, IRabbitMQCartMessageSender rabbitMQCartMessageSender)
         {
             _cartRepository = cartRepository;
             _messageBus = messageBus;
             _couponRepository = couponRepository;
             this._responseDto = new ResponseDto();
+            _rabbitMQCartMessageSender = rabbitMQCartMessageSender;
         }
 
         [HttpGet("GetCart/{userId}")]
@@ -184,9 +188,13 @@ namespace ShoppingCart.ShoppingCartAPI.Controllers
                 // logic to add message to process order.
                 //passing queue topic name 
                 //await _messageBus.PublishMessage(checkoutHeader, "checkoutmessagetopic");
-                
+
                 // passing queue name
-                await _messageBus.PublishMessage(checkoutHeader, "checkoutqueue");
+                // await _messageBus.PublishMessage(checkoutHeader, "checkoutqueue");
+
+                //rabbitMQ 
+                _rabbitMQCartMessageSender.SendMessage(checkoutHeader, "checkoutqueue");
+
                 await _cartRepository.ClearCart(checkoutHeader.UserId);
 
                 _responseDto.IsSuccess = true;

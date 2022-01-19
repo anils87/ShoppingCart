@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Microsoft.IdentityModel.Tokens;
 using ShoppingCart.ShoppingCartAPI.Repository;
 using ShoppingCart.MessageBus;
+using ShoppingCart.ShoppingCartAPI.RabbitMQSender;
 
 namespace ShoppingCart.ShoppingCartAPI
 {
@@ -42,7 +43,8 @@ namespace ShoppingCart.ShoppingCartAPI
             services.AddScoped<ICartRepository, CartRepository>();
             services.AddScoped<ICouponRepository, CouponRepository>();
             services.AddSingleton<IMessageBus,AzureServiceBusMessageBus>();
-            
+            services.AddSingleton<IRabbitMQCartMessageSender, RabbitMQCartMessageSender>();
+
             services.AddHttpClient<ICouponRepository, CouponRepository>(u=>u.BaseAddress = new Uri(Configuration["ServiceUrls:CouponAPI"]));
             
 

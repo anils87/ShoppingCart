@@ -10,6 +10,7 @@ using Microsoft.OpenApi.Models;
 using ShoppingCart.MessageBus;
 using ShoppingCart.PaymentAPI.Extension;
 using ShoppingCart.PaymentAPI.Messaging;
+using ShoppingCart.PaymentAPI.RabbitMQSender;
 using ShoppingCart.PaymentProcessor;
 using System;
 using System.Collections.Generic;
@@ -33,6 +34,8 @@ namespace ShoppingCart.PaymentAPI
             services.AddSingleton<IProcessPayment, ProcessPayment>();
             services.AddSingleton<IAzureServiceBusConsumer, AzureServiceBusConsumer>();
             services.AddSingleton<IMessageBus,AzureServiceBusMessageBus>();
+            services.AddSingleton<IRabbitMQPaymentMessageSender, RabbitMQPaymentMessageSender>();
+            services.AddHostedService<RabbitMQPaymentConsumer>();
 
             services.AddControllers();
             services.AddSwaggerGen(c =>

@@ -14,6 +14,7 @@ using ShoppingCart.MessageBus;
 using ShoppingCart.OrderAPI.DBContext;
 using ShoppingCart.OrderAPI.Extension;
 using ShoppingCart.OrderAPI.Messaging;
+using ShoppingCart.OrderAPI.RabbitMQSender;
 using ShoppingCart.OrderAPI.Repository;
 using System;
 using System.Collections.Generic;
@@ -46,9 +47,13 @@ namespace ShoppingCart.OrderAPI
 
             var optionBuilder = new DbContextOptionsBuilder<ApplicationDBContext>();
             optionBuilder.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+
+            services.AddHostedService<RabbitMQCheckoutConsumer>();
+            services.AddHostedService<RabbitMQPaymentConsumer>();
             services.AddSingleton(new OrderRepository(optionBuilder.Options));
             services.AddSingleton<IAzureServiceBusConsumer, AzureServiceBusConsumer>();
             services.AddSingleton<IMessageBus, AzureServiceBusMessageBus>();
+            services.AddSingleton<IRabbitMQOrderMessageSender, RabbitMQOrderMessageSender>();
 
             services.AddAuthentication("Bearer").AddJwtBearer("Bearer", options =>
             {

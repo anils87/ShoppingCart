@@ -41,6 +41,8 @@ namespace ShoppingCart.EmailAPI
 
             var optionBuilder = new DbContextOptionsBuilder<ApplicationDBContext>();
             optionBuilder.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+
+            services.AddHostedService<RabbitMQEmailConsumer>();
             services.AddSingleton(new EmailRepository(optionBuilder.Options));
             services.AddSingleton<IAzureServiceBusConsumer, AzureServiceBusConsumer>();
             services.AddControllers();
