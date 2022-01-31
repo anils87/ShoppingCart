@@ -89,6 +89,16 @@ namespace ShoppingCart.ProductAPI
                 }
                 });
             });
+
+            // Register In Memory Cache
+            // services.AddMemoryCache();
+
+            // Register Distributed Caching
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = "localhost:6379";
+                //options.InstanceName = "localProductRedis_";
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

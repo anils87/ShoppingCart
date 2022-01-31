@@ -1,11 +1,15 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json;
 using ShoppingCart.ProductAPI.Models.DTOs;
 using ShoppingCart.ProductAPI.Repository;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace ShoppingCart.ProductAPI.Controllers
@@ -16,20 +20,63 @@ namespace ShoppingCart.ProductAPI.Controllers
     {
         protected ResponseDto responseDto;
         private IProductRepository _productRepository;
-
-        public ProductController(IProductRepository productRepository)
+        //private readonly IMemoryCache _imemoryCache;
+        private readonly IDistributedCache _distCache;
+        public ProductController(IProductRepository productRepository, IDistributedCache distCache)
         {
             _productRepository = productRepository;
             this.responseDto = new ResponseDto();
+            //_imemoryCache = imemoryCache;
+            _distCache = distCache;
         }
         
         [HttpGet]          
         public async Task<object> GetProductList()
         {
+            string cacheKey = "productList";
             try
             {
-                IEnumerable<ProductDto> productDtos = await _productRepository.GetProducts();
-                responseDto.Result = productDtos;
+                // In Memory Cache
+                //var memProductList = _imemoryCache.Get("productList");
+
+                //Distributed Cache
+                List<ProductDto> productDtos = new List<ProductDto>();
+                string serializedProductList;
+                var redisProductList = await _distCache.GetAsync(cacheKey);
+                if (redisProductList != null)
+                {
+                    serializedProductList = Encoding.UTF8.GetString(redisProductList);
+                    productDtos = JsonConvert.DeserializeObject<List<ProductDto>>(serializedProductList);
+                    responseDto.Result = productDtos;
+                }
+                else
+                {
+                    var productListDB = await _productRepository.GetProducts();
+                    serializedProductList = JsonConvert.SerializeObject(productListDB);
+                    redisProductList = Encoding.UTF8.GetBytes(serializedProductList);
+                    var distCacheOption = new DistributedCacheEntryOptions()
+                    {
+                        AbsoluteExpiration = DateTime.Now.AddSeconds(50),
+                        SlidingExpiration = TimeSpan.FromSeconds(20)
+                    };
+                    await _distCache.SetAsync(cacheKey, redisProductList, distCacheOption);                  
+                    responseDto.Result = productListDB;
+                    /*
+                    // Im Memory Caching implememtation
+                    var cacheExpirationOption = new MemoryCacheEntryOptions
+                    {
+                        AbsoluteExpiration = DateTime.Now.AddSeconds(50),
+                        Priority = CacheItemPriority.High,
+                        SlidingExpiration = TimeSpan.FromSeconds(20)
+
+                    };
+                    _imemoryCache.Set("productList", productDtos,cacheExpirationOption);
+                    */
+
+                    //Distributed Caching Implementation
+
+                }
+                
                 responseDto.IsSuccess = true;
             }
             catch(Exception ex)
